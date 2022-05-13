@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-from numerical_analysis import interpolation
 
 from numerical_analysis.interpolation import lagrange_interpolation
 
