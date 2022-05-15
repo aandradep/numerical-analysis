@@ -5,10 +5,11 @@ from numerical_analysis.ode.euler_methods import (
     ExplicitTrapezoid,
     ImplicitTrapezoid,
 )
+from numerical_analysis.ode.runge_kutta import RungeKutta
 
 
 def func(t, y):
-    return y - t**2 + 1
+    return y - t ** 2 + 1
 
 
 def test_euler_method():
@@ -16,10 +17,10 @@ def test_euler_method():
     solution = euler.solve()
     expected = np.array(
         [
-            [0.0, 1.5],
-            [0.66666667, 2.87037037],
-            [1.33333333, 4.2654321],
-            [2.0, 5.1090535],
+            [0.0, 0.5],
+            [0.66666667, 1.5],
+            [1.33333333, 2.87037037],
+            [2.0, 4.2654321],
         ]
     )
 
@@ -31,10 +32,10 @@ def test_explict_trapezoid():
     solution = explicit_trapezoid.solve()
     expected = np.array(
         [
-            [0.0, 1.68518519],
-            [0.66666667, 3.23251029],
-            [1.33333333, 4.673754],
-            [2.0, 5.1244983],
+            [0.0, 0.5],
+            [0.66666667, 1.68518519],
+            [1.33333333, 3.23251029],
+            [2.0, 4.673754],
         ]
     )
 
@@ -45,11 +46,21 @@ def test_implicit_trapezoid():
     implicit_trapezoid = ImplicitTrapezoid(func, 0, 2, 3, 0.5)
     solution = implicit_trapezoid.solve()
     expected = np.array(
+        [[0.0, 0.5], [0.66666667, 1.77777778], [1.33333333, 3.44444444], [2.0, 5.0]]
+    )
+
+    assert np.allclose(solution, expected)
+
+
+def test_runge_kutta():
+    runge_kuta = RungeKutta(func, 0, 2, 3, 0.5)
+    solution = runge_kuta.solve()
+    expected = np.array(
         [
-            [0.0, 1.77777778],
-            [0.66666667, 3.44444444],
-            [1.33333333, 5.0],
-            [2.0, 5.44444444],
+            [0.0, 0.5],
+            [0.66666667, 1.80178326],
+            [1.33333333, 3.54192563],
+            [2.0, 5.29399973],
         ]
     )
 

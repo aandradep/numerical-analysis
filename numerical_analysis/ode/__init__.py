@@ -1,1 +1,2 @@
 from numerical_analysis.ode.euler_methods import EulerMethod, ExplicitTrapezoid, ImplicitTrapezoid
+from numerical_analysis.ode.runge_kutta import RungeKutta

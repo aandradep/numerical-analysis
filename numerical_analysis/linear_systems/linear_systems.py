@@ -1,7 +1,9 @@
 import numpy as np
 import sys
 
-class LinearSystems:
+from abc import ABC, abstractmethod
+
+class LinearSystems(ABC):
     def __init__(
             self, 
             mat,
@@ -35,6 +37,7 @@ class LinearSystems:
     def max_iter(self):
         return self._max_iter
     
+    @abstractmethod
     def iterate(self, x0, xi):
         raise NotImplementedError()
         

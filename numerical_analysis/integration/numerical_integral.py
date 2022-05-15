@@ -1,7 +1,8 @@
 import numpy as np
 
+from abc import ABC, abstractmethod
 
-class NumericalIntegral:
+class NumericalIntegral(ABC):
     def __init__(self, function, lower, upper, interval_size):
         self._function = function
         self._lower = lower
@@ -31,6 +32,7 @@ class NumericalIntegral:
     def integration_ranges(self):
         return self._integration_ranges
 
+    @abstractmethod
     def approximation_method(self, lower, upper):
         raise NotImplementedError()
 

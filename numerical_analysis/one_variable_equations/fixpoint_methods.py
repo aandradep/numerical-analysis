@@ -1,7 +1,6 @@
-import math
+from abc import ABC, abstractmethod
 
-
-class FixPointMethods:
+class FixPointMethods(ABC):
     def __init__(self, function, tol=10**-4, max_iter=1000):
 
         self._function = function
@@ -20,9 +19,11 @@ class FixPointMethods:
     def max_iter(self):
         return self._max_iter
 
+    @abstractmethod
     def initialize(self, x0) -> dict:
         raise NotImplementedError()
 
+    @abstractmethod
     def iterate(self, params) -> float:
         raise NotImplementedError()
 
