@@ -1,1 +1,0 @@
-from numerical_analysis.systems_of_equetions.linear_systems import GaussSeidel, Jacobi

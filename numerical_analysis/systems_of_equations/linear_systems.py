@@ -1,21 +1,21 @@
 import numpy as np
 import sys
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from numerical_analysis.systems_of_equations.equations_system import EquationsSystems
 
-class LinearSystems(ABC):
+class LinearSystems(EquationsSystems):
     def __init__(
             self, 
             mat,
             b, 
-            tol=10**-3, 
-            max_iter=1000
+            *args, 
+            **kwargs,
         ):
-        
+        super().__init__(*args, **kwargs)
+
         self._mat = mat
         self._b = b
-        self._tol = tol
-        self._max_iter = max_iter
         self._n = self._mat.shape[0]
         
         if mat.shape[0] != mat.shape[1]:
@@ -40,19 +40,6 @@ class LinearSystems(ABC):
     @abstractmethod
     def iterate(self, x0, xi):
         raise NotImplementedError()
-        
-    def _l2_norm(self, xi, x0):
-        return np.sqrt(sum((xi - x0)**2))
-    
-    def _stopping_condition(self, xi, x0):
-        norm = self._l2_norm(xi, x0)
-        return norm > self._tol
-    
-    def _warning(self, iterations):
-        if iterations==self._max_iter:
-            import warnings
-            message = f"Algorithm did converge in {self._max_iter} iterations"
-            warnings.warn(message)
     
     def solve(self, x0):
         i = 0
