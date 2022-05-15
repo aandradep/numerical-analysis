@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from numerical_analysis.linear_systems import Jacobi, GaussSeidel
+from numerical_analysis.systems_of_equetions import Jacobi, GaussSeidel
 
 
 @pytest.fixture

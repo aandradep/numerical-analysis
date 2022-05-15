@@ -1,0 +1,1 @@
+from numerical_analysis.solution_of_equations.fixpoint_methods_on_variable import NewtonRaphson, Secant

@@ -1,5 +1,5 @@
 from numerical_analysis.ode.numerical_ode import NumericalODE
-from numerical_analysis.one_variable_equations import Secant
+from numerical_analysis.solution_of_equations import Secant
 
 
 class EulerMethod(NumericalODE):

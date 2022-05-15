@@ -1,7 +1,7 @@
 import pytest
 import math 
 
-from numerical_analysis.one_variable_equations import NewtonRaphson, Secant
+from numerical_analysis.solution_of_equations import NewtonRaphson, Secant
 
 def func(x):
     return math.cos(x) - x
