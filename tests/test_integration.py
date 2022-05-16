@@ -4,7 +4,7 @@ from numerical_analysis.integration import Trapezoid, Simpsons, Booles, Midpoint
 
 
 def _func(x):
-    return math.sqrt(1 + x**2)
+    return math.sqrt(1 + x ** 2)
 
 
 def test_trapezoid():

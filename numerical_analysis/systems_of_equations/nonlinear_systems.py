@@ -1,7 +1,3 @@
-import sys
-import numpy as np
-
-from abc import abstractmethod
 from numerical_analysis.systems_of_equations.linear_systems import GaussSeidel
 from numerical_analysis.systems_of_equations.equations_system import EquationsSystems
 
@@ -35,11 +31,7 @@ class Newtons(NonLinearSystems):
         continue_iterate = True
         
         while i < self._max_iter and continue_iterate:
-            Fx = self._F_mat(X)
-            Jx = self._jacobian(X)
-
-            gauss_seidel = GaussSeidel(Jx, -Fx)
-            solution = gauss_seidel.solve(X)
+            solution = GaussSeidel(self._jacobian(X), -self._F_mat(X)).solve(X)
             Xi = solution + X
             continue_iterate = self._stopping_condition(Xi, X)
             i += 1
