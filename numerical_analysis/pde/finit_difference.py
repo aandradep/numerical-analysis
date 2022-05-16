@@ -1,9 +1,10 @@
-from abc import abstractmethod
 import sys
 import numpy as np
 
 from typing import Tuple, Optional
+from abc import abstractmethod
 
+from numerical_analysis.systems_of_equations.linear_systems import SOR
 
 class FinitDifference:
     def __init__(
@@ -126,3 +127,17 @@ class FTCS(FinitDifference):
 class BTCS(FinitDifference):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def iterate(self, grid, i, omega=1.5):
+        x_steps = grid.shape[1] - 1
+        x0 = grid[i-1, 1:x_steps]
+        grid[i, 1:x_steps] = SOR(mat=self._A_matrix(x_steps), b=x0, omega=omega).solve(x0)
+
+        return grid[i,:]
+
+    def _A_matrix(self, x_steps):
+        diag = np.diag(np.repeat(1 + 2*self._lambda, x_steps - 1))
+        upper_offdiag = np.diag(np.repeat(-self._lambda, x_steps - 2), 1)
+        lower_offdiag = np.diag(np.repeat(-self._lambda, x_steps - 2), -1)
+
+        return diag + upper_offdiag + lower_offdiag

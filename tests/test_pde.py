@@ -1,20 +1,27 @@
 import math
 import numpy as np
+import pytest
 
-from numerical_analysis.pde import FTCS
+from numerical_analysis.pde import FTCS, BTCS, FinitDifference
 
 
-def test_ftcs():
-    ftcs = FTCS(
-        1.0, 1.0, 0.5, 0.5, 0.5, (10, 10), np.vectorize(lambda x: math.sin(math.pi * x))
-    )
+@pytest.fixture
+def inputs():
+    function = np.vectorize(lambda x: math.sin(math.pi * x))
 
-    initial_grid = ftcs.create_grid()
-    expected_initial_grid = np.array(
-        [[10.0, 1.0, 10.0], [10.0, 0.0, 10.0], [10.0, 0.0, 10.0]]
-    )
+    return {"function": function}
 
-    assert np.allclose(initial_grid, expected_initial_grid)
+
+def test_finit_difference(inputs):
+    fd = FinitDifference(1.0, 1.0, 0.5, 0.5, 0.5, (10, 10), inputs["function"])
+    result = fd.create_grid()
+    expected = np.array([[10.0, 1.0, 10.0], [10.0, 0.0, 10.0], [10.0, 0.0, 10.0]])
+
+    assert np.allclose(result, expected)
+
+
+def test_ftcs(inputs):
+    ftcs = FTCS(1.0, 1.0, 0.5, 0.5, 0.5, (10, 10), inputs["function"])
 
     result = ftcs.solve()
     expected = np.array([[10.0, 1.0, 10.0], [10.0, 10.0, 10.0], [10.0, 10.0, 10.0]])
@@ -28,7 +35,7 @@ def test_ftcs():
         0.1,
         0.0005,
         (0, 0),
-        np.vectorize(lambda x: math.sin(math.pi * x)),
+        inputs["function"],
     )
     ftcs.solve()
     result = ftcs.index_grid(t=0.5)
@@ -45,6 +52,39 @@ def test_ftcs():
                 0.00598619,
                 0.00434922,
                 0.00228652,
+                0.0,
+            ]
+        ]
+    )
+
+    assert np.allclose(result, expected)
+
+
+def test_btcs(inputs):
+    btcs = BTCS(1.0, 1.0, 0.5, 0.5, 0.5, (0, 0), inputs["function"])
+    result = btcs.solve()
+    expected = np.array(
+        [[0.0, 1.0, 0.0], [0.0, 0.49975586, 0.0], [0.0, 0.25012195, 0.0]]
+    )
+
+    assert np.allclose(result, expected)
+
+    btcs = BTCS(1.0, 1.0, 1.0, 0.1, 0.01, (0, 0), inputs["function"])
+    btcs.solve()
+    result = btcs.index_grid(t=0.5)
+    expected = np.array(
+        [
+            [
+                0.0,
+                0.00285615,
+                0.005363,
+                0.00733564,
+                0.00855342,
+                0.00899017,
+                0.00848975,
+                0.00729119,
+                0.00523461,
+                0.00293977,
                 0.0,
             ]
         ]

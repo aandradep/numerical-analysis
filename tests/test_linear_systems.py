@@ -32,9 +32,7 @@ def test_gauss_seidel(inputs):
 
 
 def test_sor():
-    mat = np.array(
-        [[4, 3, 0], [3, 4, -1], [0, -1, 4]], dtype=float
-    )
+    mat = np.array([[4, 3, 0], [3, 4, -1], [0, -1, 4]], dtype=float)
     b = np.array([24, 30, -24])
     sor = SOR(mat=mat, b=b, omega=1.25)
     solution = sor.solve(np.array([1, 1, 1]))
