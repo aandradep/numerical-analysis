@@ -67,15 +67,32 @@ class Jacobi(LinearSystems):
                 
         return xi
     
-class GaussSeidel(LinearSystems):
-    def __init__(self, *args, **kwargs):
+
+class SOR(LinearSystems):
+    def __init__(self, omega, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+        self._omega = omega
+
+        if (omega < 0) | (omega > 2):
+            sys.exit("Omega should be between 0 and 2")
+
+    @property
+    def omega(self):
+        return self._omega
+    
     def iterate(self, x0, xi):
         for i in range(self._n):
-            xi[i] = 1/self._mat[i,i] * (
+            xi[i] = (1-self._omega) * x0[i] + (self._omega/self._mat[i,i]) * (
                 -sum((xi * self._mat[i,])[:i]) -sum((x0 * self._mat[i,])[(i+1):]) 
                 + self._b[i]
             )
         
         return xi
+
+class GaussSeidel(LinearSystems):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._sor = SOR(mat=self._mat, b=self._b, omega=1)
+    
+    def iterate(self, x0, xi):    
+        return self._sor.iterate(x0, xi)    

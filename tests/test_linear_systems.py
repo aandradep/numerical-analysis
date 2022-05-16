@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from numerical_analysis.systems_of_equations import Jacobi, GaussSeidel
+from numerical_analysis.systems_of_equations import Jacobi, GaussSeidel, SOR
 
 
 @pytest.fixture
@@ -27,5 +27,17 @@ def test_gauss_seidel(inputs):
     gauss_seidel = GaussSeidel(inputs["mat"], inputs["b"])
     solution = gauss_seidel.solve(inputs["x0"])
     expected = np.array([1.00009128, 2.00002134, -1.00003115, 0.9999881])
+
+    assert np.allclose(solution, expected)
+
+
+def test_sor():
+    mat = np.array(
+        [[4, 3, 0], [3, 4, -1], [0, -1, 4]], dtype=float
+    )
+    b = np.array([24, 30, -24])
+    sor = SOR(mat=mat, b=b, omega=1.25)
+    solution = sor.solve(np.array([1, 1, 1]))
+    expected = np.array([3, 4, -5])
 
     assert np.allclose(solution, expected)
