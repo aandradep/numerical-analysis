@@ -2,7 +2,7 @@ import math
 import numpy as np
 import pytest
 
-from numerical_analysis.pde import FTCS, BTCS, FinitDifference
+from numerical_analysis.pde import CrankNicolson, BTCS, FTCS, FinitDifference
 
 
 @pytest.fixture
@@ -28,15 +28,7 @@ def test_ftcs(inputs):
 
     assert np.allclose(result, expected)
 
-    ftcs = FTCS(
-        1.0,
-        1.0,
-        1.0,
-        0.1,
-        0.0005,
-        (0, 0),
-        inputs["function"],
-    )
+    ftcs = FTCS(1.0, 1.0, 1.0, 0.1, 0.0005, (0, 0), inputs["function"])
     ftcs.solve()
     result = ftcs.index_grid(t=0.5)
     expected = np.array(
@@ -85,6 +77,31 @@ def test_btcs(inputs):
                 0.00729119,
                 0.00523461,
                 0.00293977,
+                0.0,
+            ]
+        ]
+    )
+
+    assert np.allclose(result, expected)
+
+
+def test_crank_nicolson(inputs):
+    crank_nicolson = CrankNicolson(1.0, 1.0, 1.0, 0.1, 0.01, (0, 0), inputs["function"])
+    crank_nicolson.solve()
+    result = crank_nicolson.index_grid(t=0.5)
+    expected = np.array(
+        [
+            [
+                0.0,
+                0.00231826,
+                0.00438468,
+                0.00602165,
+                0.00707747,
+                0.0074481,
+                0.00709388,
+                0.00604495,
+                0.00438122,
+                0.00226464,
                 0.0,
             ]
         ]

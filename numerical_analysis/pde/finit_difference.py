@@ -81,9 +81,7 @@ class FinitDifference:
         time_steps = grid.shape[0]
 
         for i in range(1, time_steps):
-            grid[
-                i,
-            ] = self.iterate(grid, i)
+            grid[i,:] = self.iterate(grid, i)
 
         self._grid = grid
 
@@ -139,5 +137,31 @@ class BTCS(FinitDifference):
         diag = np.diag(np.repeat(1 + 2*self._lambda, x_steps - 1))
         upper_offdiag = np.diag(np.repeat(-self._lambda, x_steps - 2), 1)
         lower_offdiag = np.diag(np.repeat(-self._lambda, x_steps - 2), -1)
+
+        return diag + upper_offdiag + lower_offdiag
+
+
+class CrankNicolson(FinitDifference):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def iterate(self, grid, i, omega=1.5):
+        x_steps = grid.shape[1] - 1
+        b = self._B_matrix(x_steps).dot(grid[i-1, 1:x_steps])
+        grid[i, 1:x_steps] = SOR(mat=self._A_matrix(x_steps), b=b, omega=omega).solve(b)
+
+        return grid[i,:]
+    
+    def _A_matrix(self, x_steps):
+        diag = np.diag(np.repeat(1 + self._lambda, x_steps - 1))
+        upper_offdiag = np.diag(np.repeat(-self._lambda/2, x_steps - 2), 1)
+        lower_offdiag = np.diag(np.repeat(-self._lambda/2, x_steps - 2), -1)
+
+        return diag + upper_offdiag + lower_offdiag
+    
+    def _B_matrix(self, x_steps):
+        diag = np.diag(np.repeat(1 - self._lambda, x_steps - 1))
+        upper_offdiag = np.diag(np.repeat(self._lambda/2, x_steps - 2), 1)
+        lower_offdiag = np.diag(np.repeat(self._lambda/2, x_steps - 2), -1)
 
         return diag + upper_offdiag + lower_offdiag
