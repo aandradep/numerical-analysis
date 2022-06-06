@@ -2,18 +2,25 @@ import math
 import numpy as np
 import pytest
 
-from numerical_analysis.pde import CrankNicolson, BTCS, FTCS, FinitDifference
-
+import numerical_analysis.pde as pde
 
 @pytest.fixture
 def inputs():
     function = np.vectorize(lambda x: math.sin(math.pi * x))
+    lambda_fun = lambda x, i: 0.5
+    heat_equation = pde.HeatEquation(
+        alpha=0.5,
+        max_time=1.0, 
+        max_x=1.0, 
+        dx=0.5, 
+        dt=0.5, 
+        boundary_conditions=(10, 10), 
+        initial_condition=function)
 
-    return {"function": function}
-
+    return {"function": function, "pde": heat_equation, "lambda": lambda_fun}
 
 def test_finit_difference(inputs):
-    fd = FinitDifference(1.0, 1.0, 0.5, 0.5, 0.5, (10, 10), inputs["function"])
+    fd = pde.FinitDifference(pde=inputs["pde"], alpha=0.5, beta=0.5, gamma=0.5)
     result = fd.create_grid()
     expected = np.array([[10.0, 1.0, 10.0], [10.0, 0.0, 10.0], [10.0, 0.0, 10.0]])
 
@@ -21,16 +28,39 @@ def test_finit_difference(inputs):
 
 
 def test_ftcs(inputs):
-    ftcs = FTCS(1.0, 1.0, 0.5, 0.5, 0.5, (10, 10), inputs["function"])
+    ftcs = pde.FTCS(pde=inputs["pde"], alpha=inputs["lambda"], beta=inputs["lambda"], gamma=inputs["lambda"])
 
     result = ftcs.solve()
+    expected = np.array([[10.0, 1.0, 10.0], [10.0, 10.5, 10.0], [10.0, 15.25, 10.0]])
+
+    assert np.allclose(result, expected)
+
+def test_btcs(inputs):
+    btcs = pde.BTCS(pde=inputs["pde"], alpha=inputs["lambda"], beta=inputs["lambda"], gamma=inputs["lambda"])
+
+    result = btcs.solve()
+    expected = np.array([[10.0, 1.0, 10.0], [10.0, 1.99975586, 10.0], [10.0, 3.99975583, 10.0]])
+
+    assert np.allclose(result, expected)
+
+def test_heat_eq_ftcs(inputs):
+    result = pde.HeatEquationFTCS(pde=inputs["pde"]).solve()
     expected = np.array([[10.0, 1.0, 10.0], [10.0, 10.0, 10.0], [10.0, 10.0, 10.0]])
 
     assert np.allclose(result, expected)
 
-    ftcs = FTCS(1.0, 1.0, 1.0, 0.1, 0.0005, (0, 0), inputs["function"])
-    ftcs.solve()
-    result = ftcs.index_grid(t=0.5)
+    heat_equation = pde.HeatEquation(
+        alpha=1.0,
+        max_time=1.0, 
+        max_x=1.0, 
+        dx=0.1, 
+        dt=0.0005,
+        boundary_conditions=(0, 0),
+        initial_condition=inputs["function"])
+
+    heat_ftcs= pde.HeatEquationFTCS(pde=heat_equation)
+    heat_ftcs.solve()
+    result = heat_ftcs.index_grid(t=0.5)
     expected = np.array(
         [
             [
@@ -51,19 +81,19 @@ def test_ftcs(inputs):
 
     assert np.allclose(result, expected)
 
+def test_heat_eq_btcs(inputs):
+    heat_equation = pde.HeatEquation(
+        alpha=1.0,
+        max_time=1.0, 
+        max_x=1.0, 
+        dx=0.1, 
+        dt=0.01,
+        boundary_conditions=(0, 0),
+        initial_condition=inputs["function"])
+    heat_btcs = pde.HeatEquationBTCS(pde=heat_equation)
+    heat_btcs.solve()
 
-def test_btcs(inputs):
-    btcs = BTCS(1.0, 1.0, 0.5, 0.5, 0.5, (0, 0), inputs["function"])
-    result = btcs.solve()
-    expected = np.array(
-        [[0.0, 1.0, 0.0], [0.0, 0.49975586, 0.0], [0.0, 0.25012195, 0.0]]
-    )
-
-    assert np.allclose(result, expected)
-
-    btcs = BTCS(1.0, 1.0, 1.0, 0.1, 0.01, (0, 0), inputs["function"])
-    btcs.solve()
-    result = btcs.index_grid(t=0.5)
+    result = heat_btcs.index_grid(t=0.5)
     expected = np.array(
         [
             [
@@ -83,12 +113,27 @@ def test_btcs(inputs):
     )
 
     assert np.allclose(result, expected)
-
-
+    
 def test_crank_nicolson(inputs):
-    crank_nicolson = CrankNicolson(1.0, 1.0, 1.0, 0.1, 0.01, (0, 0), inputs["function"])
-    crank_nicolson.solve()
-    result = crank_nicolson.index_grid(t=0.5)
+    cn = pde.CrankNicolson(pde=inputs["pde"], alpha=0.5, beta=0.5, gamma=0.5)
+
+    result = cn.solve()
+    expected = np.array([[10.0, 1.0, 10.0], [10.0, 0.33300781, 10.0], [10.0, 0.11121941, 10.0]])
+
+    assert np.allclose(result, expected)
+
+def test_heat_eq_crank_nicolson(inputs):
+    heat_equation = pde.HeatEquation(
+        alpha=1.0,
+        max_time=1.0, 
+        max_x=1.0, 
+        dx=0.1, 
+        dt=0.01,
+        boundary_conditions=(0, 0),
+        initial_condition=inputs["function"])
+    heat_cn = pde.HeatEquationCN(pde=heat_equation)
+    heat_cn.solve()
+    result = heat_cn.index_grid(t=0.5)
     expected = np.array(
         [
             [
@@ -108,3 +153,42 @@ def test_crank_nicolson(inputs):
     )
 
     assert np.allclose(result, expected)
+
+def test_black_scholes_ftcs():
+    strike = 10
+    upper_bound = 20-10*0.9
+    call_payoff = np.vectorize(lambda x: np.maximum(x-strike, 0))
+    bsm = pde.BlackScholes(
+        strike=strike,
+        sigma=0.3,
+        risk_free=0.1,
+        max_time=2, 
+        max_x=20, 
+        dx=0.4, 
+        dt=1/252,
+        boundary_conditions=(0, upper_bound),
+        initial_condition=call_payoff
+    )
+
+    bsm_ftcs = pde.BlackScholesFTCS(pde=bsm)
+    bsm_ftcs.solve()
+
+    result = bsm_ftcs.index_grid(t=0.5, x=14)
+    assert round(result[0], 2) == 4.61
+
+    bsm_sv = pde.BSMStochasticVol(
+        strike=strike,
+        sigma0=0.2,
+        sigma1=0.1,
+        risk_free=0.1,
+        max_time=2,
+        max_x=20,
+        dx=0.4,
+        dt=1/252,
+        boundary_conditions=(0, upper_bound),
+        initial_condition=call_payoff
+    )
+    sv_ftcs = pde.BlackScholesFTCS(pde=bsm_sv)
+    sv_ftcs.solve()
+    result = sv_ftcs.index_grid(t=0.5, x=14)
+    assert round(result[0], 2) == 4.52
