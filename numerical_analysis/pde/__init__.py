@@ -15,4 +15,4 @@ from numerical_analysis.pde.heat_equation import (
     HeatEquationBTCS,
     HeatEquationCN,
 )
-from numerical_analysis.pde.black_scholes import BlackScholesFTCS
+from numerical_analysis.pde.black_scholes import BlackScholesFTCS, BlackScholesBTCS

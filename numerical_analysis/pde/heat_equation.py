@@ -14,11 +14,17 @@ class HeatEquationFTCS(FTCS):
 
 class HeatEquationBTCS(BTCS):
     def __init__(self, *args, **kwargs):
-        lambda_fun = np.vectorize(lambda x: -kwargs["pde"].lambda_)
-        beta_fun = np.vectorize(lambda x: 1 + 2 * kwargs["pde"].lambda_)
+        self._pde = kwargs["pde"]
         super().__init__(
-            alpha=lambda_fun, beta=beta_fun, gamma=lambda_fun, *args, **kwargs
+            alpha=self.pde_lamba, beta=self.pde_beta, gamma=self.pde_lamba, *args, **kwargs
         )
+    
+    def pde_beta(self, X, t):
+        return np.repeat(1 + 2 * self._pde.lambda_, X.size)
+    
+    def pde_lamba(self, X, t):
+        return np.repeat(-self._pde.lambda_, X.size)
+
 
 
 class HeatEquationCN(CrankNicolson):

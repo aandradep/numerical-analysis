@@ -110,17 +110,17 @@ class BTCS(FinitDifference):
         x_steps = grid.shape[1] - 1
         x0 = grid[i - 1, 1:x_steps]
         grid[i, 1:x_steps] = SOR(
-            mat=self._A_matrix(x_steps, self._x_range, i), b=x0, omega=omega
+            mat=self._A_matrix(x_steps, self._x_range, i), b=x0, omega=omega,
         ).solve(x0)
 
         return grid[i, :]
 
     def _A_matrix(self, x_steps, x, i):
-        diag = np.diag(self._beta(x, i)[: x_steps - 1])
-        upper_offdiag = np.diag(self._gamma(x, i)[: x_steps - 2], 1)
-        lower_offdiag = np.diag(self._alpha(x, i)[: x_steps - 2], -1)
-
-        return diag + upper_offdiag + lower_offdiag
+        diag = np.diag(self._beta(x, i)[1: x_steps+1])
+        upper_offdiag = np.diag(self._gamma(x, i),1)[1:x_steps+1,1:x_steps+1]
+        lower_offdiag = np.diag(self._alpha(x, i)[1:],-1)[1:,1:]
+        
+        return (diag + upper_offdiag + lower_offdiag)[:(x_steps-1), :(x_steps-1)]
 
 
 class CrankNicolson(FinitDifference):

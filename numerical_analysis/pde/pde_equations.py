@@ -63,25 +63,6 @@ class HeatEquation(PDE):
         return self._lambda
 
 
-class BlackScholes(PDE):
-    def __init__(self, strike: float, sigma: float, risk_free: float, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._strike = strike
-        self._sigma = sigma
-        self._risk_free = risk_free
-
-    @property
-    def strike(self):
-        return self._strike
-
-    @property
-    def risk_free(self):
-        return self._risk_free
-
-    def sigma(self, S, t):
-        return self._sigma
-
-
 class BSMStochasticVol(PDE):
     def __init__(
         self,
@@ -119,3 +100,17 @@ class BSMStochasticVol(PDE):
             math.cos((2 * math.pi * t) / self._max_time)
             * np.exp(-(((S / self._strike) - 1) ** 2))
         )
+
+
+
+class BlackScholes(BSMStochasticVol):
+    def __init__(self, sigma: float, *args, **kwargs):
+        super().__init__(sigma0=sigma, sigma1=0, *args, **kwargs)
+
+    @property
+    def strike(self):
+        return self._strike
+
+    @property
+    def risk_free(self):
+        return self._risk_free

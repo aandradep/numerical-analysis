@@ -8,6 +8,7 @@ import numerical_analysis.pde as pde
 def inputs():
     function = np.vectorize(lambda x: math.sin(math.pi * x))
     lambda_fun = lambda x, i: 0.5
+    lambda_btcs = lambda x, i: np.repeat(0.5, x.size)
     heat_equation = pde.HeatEquation(
         alpha=0.5,
         max_time=1.0, 
@@ -21,7 +22,15 @@ def inputs():
     upper_bound = 20-10*0.9
     call_payoff = np.vectorize(lambda x: np.maximum(x-strike, 0))
 
-    return {"function": function, "pde": heat_equation, "lambda": lambda_fun, "strike": strike, "upper_bound": upper_bound, "call_payoff": call_payoff}
+    return {
+        "function": function, 
+        "pde": heat_equation, 
+        "lambda": lambda_fun, 
+        "lambda_btcs": lambda_btcs,
+        "strike": strike, 
+        "upper_bound": upper_bound, 
+        "call_payoff": call_payoff
+    }
 
 def test_finit_difference(inputs):
     fd = pde.FinitDifference(pde=inputs["pde"], alpha=0.5, beta=0.5, gamma=0.5)
@@ -40,8 +49,7 @@ def test_ftcs(inputs):
     assert np.allclose(result, expected)
 
 def test_btcs(inputs):
-    lambda_btcs = lambda x, i: np.repeat(0.5, x.size)
-    btcs = pde.BTCS(pde=inputs["pde"], alpha=lambda_btcs, beta=lambda_btcs, gamma=lambda_btcs)
+    btcs = pde.BTCS(pde=inputs["pde"], alpha=inputs["lambda_btcs"], beta=inputs["lambda_btcs"], gamma=inputs["lambda_btcs"])
 
     result = btcs.solve()
     expected = np.array([[10.0, 1.0, 10.0], [10.0, 1.99975586, 10.0], [10.0, 3.99975583, 10.0]])
@@ -176,6 +184,25 @@ def test_black_scholes_ftcs(inputs):
     bsm_ftcs.solve()
 
     result = bsm_ftcs.index_grid(t=0.5, x=14)
+    assert round(result[0], 2) == 4.61
+
+def test_black_scholes_btcs(inputs):
+    bsm = pde.BlackScholes(
+        strike=inputs["strike"],
+        sigma=0.3,
+        risk_free=0.1,
+        max_time=2, 
+        max_x=20, 
+        dx=2, 
+        dt=20/252,
+        boundary_conditions=(0, inputs["upper_bound"]),
+        initial_condition=inputs["call_payoff"]
+    )
+
+    bsm_btcs = pde.BlackScholesBTCS(pde=bsm)
+    bsm_btcs.solve()
+
+    result = bsm_btcs.index_grid(t=140/252, x=14)
     assert round(result[0], 2) == 4.61
 
 def test_black_scholes_sv_ftcs(inputs):
