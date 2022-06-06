@@ -9,7 +9,7 @@ from numerical_analysis.systems_of_equations.linear_systems import SOR
 
 
 class FinitDifference:
-    def __init__(self, pde: PDE, alpha: float, beta: float, gamma: float):
+    def __init__(self, pde: PDE, alpha: np.vectorize, beta: np.vectorize, gamma: np.vectorize):
         self._pde = pde
         self._alpha = alpha
         self._beta = beta
@@ -107,16 +107,16 @@ class BTCS(FinitDifference):
     def iterate(self, grid, i, omega=1.5):
         x_steps = grid.shape[1] - 1
         x0 = grid[i - 1, 1:x_steps]
-        grid[i, 1:x_steps] = SOR(mat=self._A_matrix(x_steps, self._x_range), b=x0, omega=omega).solve(
+        grid[i, 1:x_steps] = SOR(mat=self._A_matrix(x_steps, self._x_range, i), b=x0, omega=omega).solve(
             x0
         )
 
         return grid[i, :]
 
-    def _A_matrix(self, x_steps, x):
-        diag = np.diag(self._beta(x))
-        upper_offdiag = np.diag(self._gamma(x)[:x_steps - 2], 1)
-        lower_offdiag = np.diag(self._alpha(x)[:x_steps - 2], -1)
+    def _A_matrix(self, x_steps, x, i):
+        diag = np.diag(self._beta(x, i)[:x_steps-1])
+        upper_offdiag = np.diag(self._gamma(x, i)[:x_steps - 2], 1)
+        lower_offdiag = np.diag(self._alpha(x, i)[:x_steps - 2], -1)
 
         return diag + upper_offdiag + lower_offdiag
 

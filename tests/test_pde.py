@@ -36,7 +36,8 @@ def test_ftcs(inputs):
     assert np.allclose(result, expected)
 
 def test_btcs(inputs):
-    btcs = pde.BTCS(pde=inputs["pde"], alpha=inputs["lambda"], beta=inputs["lambda"], gamma=inputs["lambda"])
+    lambda_btcs = lambda x, i: np.repeat(0.5, x.size)
+    btcs = pde.BTCS(pde=inputs["pde"], alpha=lambda_btcs, beta=lambda_btcs, gamma=lambda_btcs)
 
     result = btcs.solve()
     expected = np.array([[10.0, 1.0, 10.0], [10.0, 1.99975586, 10.0], [10.0, 3.99975583, 10.0]])
