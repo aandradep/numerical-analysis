@@ -16,8 +16,12 @@ def inputs():
         dt=0.5, 
         boundary_conditions=(10, 10), 
         initial_condition=function)
+    
+    strike = 10
+    upper_bound = 20-10*0.9
+    call_payoff = np.vectorize(lambda x: np.maximum(x-strike, 0))
 
-    return {"function": function, "pde": heat_equation, "lambda": lambda_fun}
+    return {"function": function, "pde": heat_equation, "lambda": lambda_fun, "strike": strike, "upper_bound": upper_bound, "call_payoff": call_payoff}
 
 def test_finit_difference(inputs):
     fd = pde.FinitDifference(pde=inputs["pde"], alpha=0.5, beta=0.5, gamma=0.5)
@@ -155,20 +159,17 @@ def test_heat_eq_crank_nicolson(inputs):
 
     assert np.allclose(result, expected)
 
-def test_black_scholes_ftcs():
-    strike = 10
-    upper_bound = 20-10*0.9
-    call_payoff = np.vectorize(lambda x: np.maximum(x-strike, 0))
+def test_black_scholes_ftcs(inputs):
     bsm = pde.BlackScholes(
-        strike=strike,
+        strike=inputs["strike"],
         sigma=0.3,
         risk_free=0.1,
         max_time=2, 
         max_x=20, 
         dx=0.4, 
         dt=1/252,
-        boundary_conditions=(0, upper_bound),
-        initial_condition=call_payoff
+        boundary_conditions=(0, inputs["upper_bound"]),
+        initial_condition=inputs["call_payoff"]
     )
 
     bsm_ftcs = pde.BlackScholesFTCS(pde=bsm)
@@ -177,8 +178,9 @@ def test_black_scholes_ftcs():
     result = bsm_ftcs.index_grid(t=0.5, x=14)
     assert round(result[0], 2) == 4.61
 
+def test_black_scholes_sv_ftcs(inputs):
     bsm_sv = pde.BSMStochasticVol(
-        strike=strike,
+        strike=inputs["strike"],
         sigma0=0.2,
         sigma1=0.1,
         risk_free=0.1,
@@ -186,8 +188,8 @@ def test_black_scholes_ftcs():
         max_x=20,
         dx=0.4,
         dt=1/252,
-        boundary_conditions=(0, upper_bound),
-        initial_condition=call_payoff
+        boundary_conditions=(0, inputs["upper_bound"]),
+        initial_condition=inputs["call_payoff"]
     )
     sv_ftcs = pde.BlackScholesFTCS(pde=bsm_sv)
     sv_ftcs.solve()

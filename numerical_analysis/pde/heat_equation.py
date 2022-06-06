@@ -8,11 +8,7 @@ class HeatEquationFTCS(FTCS):
         lambda_fun = np.vectorize(lambda x, t: kwargs["pde"].lambda_)
         beta_fun = np.vectorize(lambda x, t: 1 - 2 * kwargs["pde"].lambda_)
         super().__init__(
-            alpha=lambda_fun,
-            beta=beta_fun,
-            gamma=lambda_fun,
-            *args,
-            **kwargs
+            alpha=lambda_fun, beta=beta_fun, gamma=lambda_fun, *args, **kwargs
         )
 
 
@@ -21,11 +17,7 @@ class HeatEquationBTCS(BTCS):
         lambda_fun = np.vectorize(lambda x: -kwargs["pde"].lambda_)
         beta_fun = np.vectorize(lambda x: 1 + 2 * kwargs["pde"].lambda_)
         super().__init__(
-            alpha=lambda_fun,
-            beta=beta_fun,
-            gamma=lambda_fun,
-            *args,
-            **kwargs
+            alpha=lambda_fun, beta=beta_fun, gamma=lambda_fun, *args, **kwargs
         )
 
 

@@ -4,6 +4,7 @@ import numpy as np
 from typing import Tuple
 from abc import ABC
 
+
 class PDE(ABC):
     def __init__(
         self,
@@ -61,43 +62,42 @@ class HeatEquation(PDE):
     def lambda_(self):
         return self._lambda
 
+
 class BlackScholes(PDE):
     def __init__(self, strike: float, sigma: float, risk_free: float, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._strike = strike
         self._sigma = sigma
         self._risk_free = risk_free
-    
+
     @property
     def strike(self):
         return self._strike
 
     @property
-    def sigma(self):
-        return self._sigma
-    
-    @property
     def risk_free(self):
         return self._risk_free
-    
-    def pde_alpha(self, X, t):
-        return (self._dt / 2) * (((self._sigma**2 * (X**2)) / (self._dx**2)) - ((self._risk_free * X)/self._dx))
 
-    def pde_beta(self, X, t):
-        return 1 - (self._dt / (self._dx**2)) * self._sigma**2 * X**2 - (self._risk_free * self._dt) 
-
-    def pde_gamma(self, X, t):
-        return (self._dt / 2) * (((self._sigma**2 * X**2)/(self._dx**2)) + (self._risk_free * X)/self._dx)
+    def sigma(self, S, t):
+        return self._sigma
 
 
 class BSMStochasticVol(PDE):
-    def __init__(self, strike: float, sigma0: float, sigma1: float, risk_free: float, *args, **kwargs):
+    def __init__(
+        self,
+        strike: float,
+        sigma0: float,
+        sigma1: float,
+        risk_free: float,
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self._strike = strike
         self._sigma0 = sigma0
         self._sigma1 = sigma1
         self._risk_free = risk_free
-    
+
     @property
     def strike(self):
         return self._strike
@@ -105,25 +105,17 @@ class BSMStochasticVol(PDE):
     @property
     def sigma0(self):
         return self._sigma0
-    
+
     @property
     def sigma0(self):
         return self._sigma1
-    
+
     @property
     def risk_free(self):
         return self._risk_free
 
     def sigma(self, S, t):
-        return self._sigma0 + self._sigma1 * (math.cos((2*math.pi*t) / self._max_time) * np.exp(-((S/self._strike)-1)**2))
-    
-    def pde_alpha(self, X, t):
-        return (self._dt / 2) * (((self.sigma(X, t)**2 * (X**2)) / (self._dx**2)) - ((self._risk_free * X)/self._dx))
-
-    def pde_beta(self, X, t):
-        return 1 - (self._dt / (self._dx**2)) * self.sigma(X, t)**2 * X**2 - (self._risk_free * self._dt) 
-
-    def pde_gamma(self, X, t):
-        return (self._dt / 2) * (((self.sigma(X, t)**2 * X**2)/(self._dx**2)) + (self._risk_free * X)/self._dx)
-    
-
+        return self._sigma0 + self._sigma1 * (
+            math.cos((2 * math.pi * t) / self._max_time)
+            * np.exp(-(((S / self._strike) - 1) ** 2))
+        )
