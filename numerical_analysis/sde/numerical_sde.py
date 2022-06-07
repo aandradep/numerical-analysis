@@ -33,23 +33,46 @@ class NumericalSDE(ABC):
         return int((self._sde.T - self._sde.t0)/self._dt)
 
     @abstractmethod
-    def iterate(self, previous_step, t, *args, **kwargs):
+    def iterate(self, previous_step, t, brownian_motion, *args, **kwargs):
         raise NotImplementedError()
 
     def solve(self, *args, **kwargs):
-        simulations = self._simulations.copy()
+        simulations = self.simulations_grid()
         simulations[:, 0] = self._sde.XO
 
         for step in range(1, self._steps):
             simulations[:, step] = self.iterate(
-                simulations[:, step - 1], step, *args, **kwargs
+                simulations[:, step - 1], step, self.brownian_motion(), *args, **kwargs
             )
 
         self._simulations = simulations
         return simulations
 
-    def simulations_grid(self):
-        return np.zeros((self._number_sim, self._steps))
+    def expected_value(self, function: Callable, *args, **kwargs):
+        half_h_mat = self.simulations_grid()
+        h_mat = self.simulations_grid(int(self._steps / 2))
+
+        half_h_mat[:, 0] = self._sde._X0
+        h_mat[:, 0] = self._sde._X0
+
+        for step in range(1, self._steps):
+            brownian_motion = self.brownian_motion()
+            half_h_mat[:, step] = self.iterate(half_h_mat[:, step - 1], step, brownian_motion)
+
+            if (step % 2) == 0:
+                h_brownian_motion += brownian_motion
+                h_mat[:, int(step / 2)]  = self.iterate(h_mat[:, int(step / 2) - 1], step / 2, h_brownian_motion)
+                pass
+            else:
+                h_brownian_motion = brownian_motion
+
+        half_h_expected_value = function(half_h_mat[:, self._steps - 1], *args, **kwargs)
+        h_expected_value = function(h_mat[:, int(self._steps / 2) - 1], *args, **kwargs)
+
+        return 2 * half_h_expected_value - h_expected_value
+
+    def simulations_grid(self, steps: int=None):
+        return np.zeros((self._number_sim, steps if steps is not None else self._steps))
 
     def brownian_motion(self):
         return np.random.randn(self._number_sim) * math.sqrt(self._dt)
@@ -67,11 +90,11 @@ class EulerMaruyamaScheme(NumericalSDE):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def iterate(self, previous_step, t):
+    def iterate(self, previous_step, t, brownian_motion):
         return (
             previous_step
             + self._sde.a(previous_step, t) * self._dt
-            + self._sde.b(previous_step, t) * self.brownian_motion()
+            + self._sde.b(previous_step, t) * brownian_motion
         )
 
 
@@ -79,44 +102,13 @@ class MilsteinScheme(EulerMaruyamaScheme):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def iterate(self, previous_step, t):
-        euler = EulerMaruyamaScheme.iterate(self, previous_step, t)
+    def iterate(self, previous_step, t, brownian_motion):
+        euler = EulerMaruyamaScheme.iterate(self, previous_step, t, brownian_motion)
         milstein = (
             0.5
             * self._sde.b(previous_step, t)
             * self._sde.b_derivative(previous_step, t)
-            * (self.brownian_motion() ** 2 - self._dt)
+            * (brownian_motion ** 2 - self._dt)
         )
 
         return euler + milstein
-
-
-class TalayTubaro(MilsteinScheme):
-    def __init__(self, function: Callable, simulation_method: str = "milstein", *args, **kwargs):
-        self._function = function
-        self._simulation_method = simulation_method
-        super().__init__(*args, **kwargs)
-    
-    @property
-    def function(self):
-        return self._function
-
-    @property
-    def simulation_method(self):
-        return self._simulation_method
-
-    def iterate(self, previous_step, t):
-        if self._simulation_method == "milstein":
-            simulations = MilsteinScheme.iterate(self, previous_step, t)
-        else:
-            simulations = EulerMaruyamaScheme.solve(self, previous_step, t)
-        
-        return simulations
-
-    def expected_value(self, *args, **kwargs):
-        simulations_half_h = super().solve()
-        simulations_h = super().solve()[:, np.arange(1, self._steps, 2)]
-        f_half_h = self._function(simulations_half_h[:, self._steps-1], *args, **kwargs)
-        f_h = self._function(simulations_h[:, (self._steps/2) - 1], *args, **kwargs)
-
-        return 2 * f_half_h - f_h
