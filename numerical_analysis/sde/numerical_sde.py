@@ -52,8 +52,8 @@ class NumericalSDE(ABC):
         half_h_mat = self.simulations_grid()
         h_mat = self.simulations_grid(int(self._steps / 2))
 
-        half_h_mat[:, 0] = self._sde._X0
-        h_mat[:, 0] = self._sde._X0
+        half_h_mat[:, 0] = self._sde.X0
+        h_mat[:, 0] = self._sde.X0
 
         for step in range(1, self._steps):
             brownian_motion = self.brownian_motion()
@@ -62,20 +62,14 @@ class NumericalSDE(ABC):
             if (step % 2) == 0:
                 h_brownian_motion += brownian_motion
                 h_mat[:, int(step / 2)]  = self.iterate(h_mat[:, int(step / 2) - 1], step / 2, h_brownian_motion)
-                pass
             else:
                 h_brownian_motion = brownian_motion
 
-        half_h_expected_value = function(half_h_mat[:, self._steps - 1], *args, **kwargs)
-        h_expected_value = function(h_mat[:, int(self._steps / 2) - 1], *args, **kwargs)
+        half_h_expected_value = function(half_h_mat, *args, **kwargs)
+        h_expected_value = function(h_mat, *args, **kwargs)
 
         return 2 * half_h_expected_value - h_expected_value
     
-    def path_dependent_expected_value(self, function: Callable, *args, **kwargs):
-        simulations = self._simulations if all(self._simulations[:, 0] == self._sde.X0) else self.solve()
-
-        return function(simulations, *args, **kwargs) 
-
     def simulations_grid(self, steps: int=None):
         return np.zeros((self._number_sim, steps if steps is not None else self._steps))
 
