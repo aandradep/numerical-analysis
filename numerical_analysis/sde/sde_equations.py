@@ -29,7 +29,7 @@ class SDE(ABC):
         return self._b
 
     @property
-    def XO(self):
+    def X0(self):
         return self._X0
 
     @property

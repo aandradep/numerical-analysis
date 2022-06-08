@@ -38,7 +38,7 @@ class NumericalSDE(ABC):
 
     def solve(self, *args, **kwargs):
         simulations = self.simulations_grid()
-        simulations[:, 0] = self._sde.XO
+        simulations[:, 0] = self._sde.X0
 
         for step in range(1, self._steps):
             simulations[:, step] = self.iterate(
@@ -70,6 +70,11 @@ class NumericalSDE(ABC):
         h_expected_value = function(h_mat[:, int(self._steps / 2) - 1], *args, **kwargs)
 
         return 2 * half_h_expected_value - h_expected_value
+    
+    def path_dependent_expected_value(self, function: Callable, *args, **kwargs):
+        simulations = self._simulations if all(self._simulations[:, 0] == self._sde.X0) else self.solve()
+
+        return function(simulations, *args, **kwargs) 
 
     def simulations_grid(self, steps: int=None):
         return np.zeros((self._number_sim, steps if steps is not None else self._steps))
