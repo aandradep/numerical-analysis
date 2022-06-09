@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 
-from typing import Optional
+from typing import Callable, Optional
 from abc import abstractmethod
 
 from numerical_analysis.pde.pde_equations import PDE
@@ -10,7 +10,7 @@ from numerical_analysis.systems_of_equations.linear_systems import SOR
 
 class FinitDifference:
     def __init__(
-        self, pde: PDE, alpha: np.vectorize, beta: np.vectorize, gamma: np.vectorize
+        self, pde: PDE, alpha: Callable, beta: Callable, gamma: Callable
     ):
         self._pde = pde
         self._alpha = alpha

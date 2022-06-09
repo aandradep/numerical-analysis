@@ -170,7 +170,7 @@ def test_heat_eq_crank_nicolson(inputs):
 def test_black_scholes_ftcs(inputs):
     bsm = pde.BlackScholes(
         strike=inputs["strike"],
-        sigma=0.3,
+        sigma=0.3**2,
         risk_free=0.1,
         max_time=2, 
         max_x=20, 
@@ -189,7 +189,7 @@ def test_black_scholes_ftcs(inputs):
 def test_black_scholes_btcs(inputs):
     bsm = pde.BlackScholes(
         strike=inputs["strike"],
-        sigma=0.3,
+        sigma=0.3**2,
         risk_free=0.1,
         max_time=2, 
         max_x=20, 
@@ -203,13 +203,13 @@ def test_black_scholes_btcs(inputs):
     bsm_btcs.solve()
 
     result = bsm_btcs.index_grid(t=140/252, x=14)
-    assert round(result[0], 2) == 4.61
+    assert round(result[0], 2) == 4.45
 
 def test_black_scholes_sv_ftcs(inputs):
     bsm_sv = pde.BSMStochasticVol(
         strike=inputs["strike"],
-        sigma0=0.2,
-        sigma1=0.1,
+        sigma0=0.2**2,
+        sigma1=0.1**2,
         risk_free=0.1,
         max_time=2,
         max_x=20,
@@ -221,4 +221,4 @@ def test_black_scholes_sv_ftcs(inputs):
     sv_ftcs = pde.BlackScholesFTCS(pde=bsm_sv)
     sv_ftcs.solve()
     result = sv_ftcs.index_grid(t=0.5, x=14)
-    assert round(result[0], 2) == 4.52
+    assert round(result[0], 2) == 4.51

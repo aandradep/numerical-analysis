@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from typing import Tuple
+from typing import Callable, Tuple
 from abc import ABC
 
 
@@ -13,7 +13,7 @@ class PDE(ABC):
         dx: float,
         dt: float,
         boundary_conditions: Tuple[float, float],
-        initial_condition: np.vectorize,
+        initial_condition: Callable,
     ):
 
         self._max_time = max_time
