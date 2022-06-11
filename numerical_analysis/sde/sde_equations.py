@@ -110,4 +110,4 @@ class GBMStochasticVol(SDE):
             * np.sin((2 * math.pi * t) / self._K)
             * np.sin((2 * math.pi * X) / self._K)
             * ((2 * math.pi) / self._K)
-        ) * X + self.sigma_func(X,t)
+        ) * X + self.sigma_func(X,t) / X
